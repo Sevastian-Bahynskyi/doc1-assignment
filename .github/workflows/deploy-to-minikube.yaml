@@ -9,8 +9,17 @@ jobs:
   job:
     name: Build and Deploy to Minikube
     runs-on: ubuntu-latest
+
+    env:
+      DOCKERHUB_USERNAME: SevastianBahynskyi
+      DOCKERHUB_PASSWORD: u3m*_Fnh4W/*fP,
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{env.DOCKERHUB_USERNAME}} -p ${{env.DOCKERHUB_PASSWORD}}
+
 
       - name: Setup cache for Minikube
         id: minikube-cache
