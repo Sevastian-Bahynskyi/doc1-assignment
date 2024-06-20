@@ -52,7 +52,7 @@ jobs:
       # Wait for PostgreSQL deployment to be ready
       - name: Wait for PostgreSQL deployment
         run: |
-          kubectl rollout status deployment/postrgres-deployment --timeout=1m
+          kubectl rollout status deployment/postgres-deployment --timeout=1m
 
       # Build Backend Docker image
       - name: Build Backend Docker image
