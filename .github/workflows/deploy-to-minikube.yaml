@@ -36,23 +36,42 @@ jobs:
       - name: Set Docker environment to Minikube
         run: eval $(minikube -p minikube docker-env)
 
-      # Build Docker image
-      - name: Build Docker image
+      # Load Database Image
+      - name: Load Database Image
+        run: |
+          docker pull postgres:latest
+          docker tag postgres:latest postgres:custom
+          minikube cache add postgres:custom
+
+      # Start PostgreSQL Deployment and Service
+      - name: Deploy PostgreSQL to Minikube
+        run: |
+          kubectl apply -f k8s/postgres-deployment.yaml
+          kubectl apply -f k8s/postgres-service.yaml
+
+      # Wait for PostgreSQL deployment to be ready
+      - name: Wait for PostgreSQL deployment
+        run: |
+          kubectl rollout status deployment/postgres-deployment --timeout=1m
+
+      # Build Backend Docker image
+      - name: Build Backend Docker image
         run: docker build -t assignment-backend:latest backend
 
-      # Tag Docker image for Minikube
-      - name: Tag Docker image
+      # Tag Backend Docker image for Minikube
+      - name: Tag Backend Docker image
         run: docker tag assignment-backend:latest assignment-backend:latest
 
-      # Deploy to Minikube
-      - name: Deploy to Minikube
+      # Deploy Backend to Minikube
+      - name: Deploy Backend to Minikube
         run: |
           kubectl apply -f k8s/backend-deployment.yaml
           kubectl apply -f k8s/backend-service.yaml
 
-      # # Wait for deployment to be ready
-      # - name: Wait for deployment rollout
-      #   run: kubectl rollout status deployment/backend-deployment --timeout=1m
+      # Wait for Backend deployment to be ready
+      - name: Wait for Backend deployment
+        run: |
+          kubectl rollout status deployment/backend-deployment --timeout=1m
 
       # Log into running pod
       - name: Log into running pod
