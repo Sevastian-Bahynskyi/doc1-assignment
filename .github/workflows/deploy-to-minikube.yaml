@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.docker-cache
-          key: docker-${{ runner.os }}-${{ hashFiles('backend/viatab/Dockerfile') }}
+          key: docker-${{ runner.os }}-${{ hashFiles('backend/Dockerfile') }}
 
       - name: Deploy to Minikube
         run: |
@@ -52,6 +52,8 @@ jobs:
           kubectl apply -f backend-service.yaml
           kubectl wait --for=condition=Ready pod -l app=backend
           kubectl get all
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl logs $POD_NAME
       - name: Test service URLs
         run: |
           echo "POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")"
