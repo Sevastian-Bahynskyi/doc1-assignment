@@ -40,19 +40,19 @@ jobs:
       - name: Load Database Image
         run: |
           docker pull postgres:latest
-          docker tag postgres:latest postgres:custom
-          minikube cache add postgres:custom
+          docker tag postgres:latest postgres:latest
+          minikube cache add postgres:latest
 
       # Start PostgreSQL Deployment and Service
       - name: Deploy PostgreSQL to Minikube
         run: |
-          kubectl apply -f k8s/postgres-deployment.yaml
-          kubectl apply -f k8s/postgres-service.yaml
+          kubectl apply -f k8s/db-deployment.yaml
+          kubectl apply -f k8s/db-service.yaml
 
       # Wait for PostgreSQL deployment to be ready
       - name: Wait for PostgreSQL deployment
         run: |
-          kubectl rollout status deployment/postgres-deployment --timeout=1m
+          kubectl rollout status deployment/db-deployment --timeout=1m
 
       # Build Backend Docker image
       - name: Build Backend Docker image
