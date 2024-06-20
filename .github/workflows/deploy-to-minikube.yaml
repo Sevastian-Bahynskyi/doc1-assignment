@@ -64,18 +64,15 @@ jobs:
           kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
           sleep 5
           SERVICE_URL=$(minikube service backend-service --url)
-          curl -X POST -v \
-            "http://127.0.0.1:8080/departments" \
-            -H "Content-Type: application/text" \
-            -d 'A'
-          curl -X POST -v \
-            "http://127.0.0.1:8080/stories" \
+          curl -X POST -H "Content-Type: application/text" -d Abc http://127.0.0.1:8080/departments
+          curl -X POST \
             -H "Content-Type: application/json" \
             -d '{
                   "headline": "Cool story",
                   "content": "Really cool story",
                   "departmentId": 1
                 }'
+            http://127.0.0.1:8080/stories
       - name: Cleanup
         run: |
           eval $(minikube docker-env -u)
