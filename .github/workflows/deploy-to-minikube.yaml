@@ -66,6 +66,11 @@ jobs:
       - name: Load Backend Docker image to Minikube
         run: minikube image load assignment-backend.tar
 
+        # Verify the image in Minikube
+      - name: Verify Backend Docker image in Minikube
+        run: |
+          docker images | grep assignment-backend
+
       # Deploy Backend to Minikube
       - name: Deploy Backend to Minikube
         run: |
