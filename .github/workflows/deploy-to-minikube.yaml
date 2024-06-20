@@ -65,11 +65,11 @@ jobs:
           sleep 5
           SERVICE_URL=$(minikube service backend-service --url)
           curl -X POST -v \
-            "$SERVICE_URL/departments" \
+            "http://127.0.0.1:8080/departments" \
             -H "Content-Type: application/text" \
             -d 'A'
           curl -X POST -v \
-            "$SERVICE_URL/stories" \
+            "http://127.0.0.1:8080/stories" \
             -H "Content-Type: application/json" \
             -d '{
                   "headline": "Cool story",
