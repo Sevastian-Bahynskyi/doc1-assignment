@@ -1,0 +1,11 @@
+*.tar
+assignment-backend.tar
+assignment-frontend.tar
+node_modules/
+*.log
+*.env
+dist/
+build/
+target/
+
+backend_c#/

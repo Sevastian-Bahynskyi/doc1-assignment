@@ -1,0 +1,85 @@
+name: Deploy to Minikube
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  job:
+    name: Build and Deploy to Minikube
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup cache for Minikube
+        id: minikube-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.minikube
+          key: minikube-${{ runner.os }}-${{ hashFiles('**/minikube.yml') }}
+          restore-keys: |
+            minikube-${{ runner.os }}-
+
+      - name: Start Minikube
+        id: backend
+        uses: medyagh/setup-minikube@latest
+        if: steps.minikube-cache.outputs.cache-hit != 'true'
+
+      - name: Try the cluster!
+        run: kubectl get pods -A
+
+      - name: Build backend Image
+        run: |
+          export SHELL=/bin/bash
+          eval $(minikube -p minikube docker-env)
+          cd backend
+          docker build -f ./Dockerfile -t assignment-backend .
+          echo -n "Verifying images: "
+          docker images
+
+      - name: Save Docker cache
+        if: always()
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.docker-cache
+          key: docker-${{ runner.os }}-${{ hashFiles('backend/viatab/Dockerfile') }}
+
+      - name: Deploy to Minikube
+        run: |
+          cd k8s
+          kubectl apply -f backend-deployment.yaml
+          kubectl apply -f backend-service.yaml
+          kubectl wait --for=condition=Ready pod -l app=backend
+          kubectl get all
+      - name: Test service URLs
+        run: |
+          echo "POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")"
+          kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
+          sleep 5
+          kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
+      - name: Test service URLs
+        run: |
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
+          sleep 5
+          SERVICE_URL=$(minikube service backend-service --url)
+          curl -X POST -v \
+            "$SERVICE_URL/departments" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "heading": "Introduction",
+                  "text": "This section introduces the topic."
+                }'
+          curl -X POST -v \
+            "$SERVICE_URL/stories" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "headline": "Cool story",
+                  "content": "Really cool story",
+                  "departmentId": 1
+                }'
+      - name: Cleanup
+        run: |
+          eval $(minikube docker-env -u)
+          minikube delete
