@@ -63,7 +63,7 @@ jobs:
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
           kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
           sleep 5
-          SERVICE_URL=$(minikube service backend-service --url | head -c -5)
+          SERVICE_URL=$(minikube service backend-service --url)
           curl -X POST -v \
             "$SERVICE_URL/departments" \
             -H "Content-Type: application/text" \
