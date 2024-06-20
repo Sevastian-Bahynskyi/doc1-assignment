@@ -64,7 +64,8 @@ jobs:
           kubectl port-forward $POD_NAME 8080:8080 &> /dev/null &
           sleep 5
           SERVICE_URL=$(minikube service backend-service --url)
-          curl -X POST -H "Content-Type: application/text" -d Abc -v http://backend-service.default/departments
+
+          curl -X POST -H "Content-Type: application/text" -d Abs http://localhost:8080/departments
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{
