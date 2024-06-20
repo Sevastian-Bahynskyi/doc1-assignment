@@ -58,9 +58,13 @@ jobs:
       - name: Build Backend Docker image
         run: docker build -t assignment-backend:latest backend
 
-      # Tag Backend Docker image for Minikube
-      - name: Tag Backend Docker image
-        run: docker tag assignment-backend:latest assignment-backend:latest
+      # Save Backend Docker image to tar
+      - name: Save Backend Docker image to tar
+        run: docker image save -o assignment-backend.tar assignment-backend:latest
+
+      # Load Backend Docker image to Minikube
+      - name: Load Backend Docker image to Minikube
+        run: minikube image load assignment-backend.tar
 
       # Deploy Backend to Minikube
       - name: Deploy Backend to Minikube
@@ -101,6 +105,4 @@ jobs:
       - name: Stop Minikube
         run: minikube stop
 
-      # Delete Minikube cluster
-      - name: Delete Minikube cluster
-        run: minikube delete --all --purge
+      # D
