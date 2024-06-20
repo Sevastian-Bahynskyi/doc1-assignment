@@ -14,22 +14,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Minikube
-      - name: Set up Minikube
-        uses: stefanprodan/minikube-tools-action@v2
-        with:
-          kubectl_version: 'latest'
-          minikube_version: 'latest'
-          driver: docker  # Use Docker as Minikube driver
-          kubernetes_version: 'latest'
-
-      # Build the Docker image
-      - name: Build Docker image
+      # Install Minikube and kubectl
+      - name: Install Minikube and kubectl
         run: |
-          eval $(minikube docker-env)
-          docker build -t assignment-backend:latest backend
+          sudo apt-get update -y
+          sudo apt-get install -y curl
+          curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube /usr/local/bin/
+          minikube version
+          curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          sudo install kubectl /usr/local/bin/
+          kubectl version --client
 
-      # Tag the image for Minikube
+      # Start Minikube with Docker driver
+      - name: Start Minikube
+        run: |
+          minikube start --driver=docker --kubernetes-version=v1.23.0
+          minikube status
+
+      # Set Docker environment to Minikube
+      - name: Set Docker environment to Minikube
+        run: eval $(minikube -p minikube docker-env)
+
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build -t assignment-backend:latest backend
+
+      # Tag Docker image for Minikube
       - name: Tag Docker image
         run: docker tag assignment-backend:latest assignment-backend:latest
 
@@ -43,12 +54,11 @@ jobs:
       - name: Wait for deployment rollout
         run: kubectl rollout status deployment/backend-deployment --timeout=1m
 
-        # Log into running pod
+      # Log into running pod
       - name: Log into running pod
         run: |
-          echo "POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")"
-          minikube logs
-          # kubectl exec -it $POD_NAME -- /bin/bash
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          echo "Logging into pod: $POD_NAME"
           kubectl logs $POD_NAME
 
       # Test requests
@@ -64,11 +74,14 @@ jobs:
                   "departmentId": 1
                 }' http://localhost:8080/stories
 
-      # Get pod name
-      - name: Get pod name
-        id: get_pod_name
-        run: echo "::set-output name=pod_name::$(kubectl get pods -l app=backend -o jsonpath='{.items[0].metadata.name}')"
-
       # Clean up Docker images (optional)
       - name: Clean up Docker images
         run: docker system prune -af
+
+      # Stop Minikube
+      - name: Stop Minikube
+        run: minikube stop
+
+      # Delete Minikube cluster
+      - name: Delete Minikube cluster
+        run: minikube delete --all --purge
