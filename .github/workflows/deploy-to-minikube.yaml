@@ -82,7 +82,11 @@ jobs:
         run: |
           kubectl rollout status deployment/backend-deployment --timeout=1m
 
-      # Log into running pod
+       # Wait for 20 seconds
+      - name: Wait for 20 seconds
+        run: sleep 20
+
+     # Log into running pod
       - name: Log into running pod
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
