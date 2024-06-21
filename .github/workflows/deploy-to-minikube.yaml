@@ -97,8 +97,11 @@ jobs:
       - name: Test /departments endpoint
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl port-forward $POD_NAME 8080:8080
-          curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments'
+          kubectl port-forward $POD_NAME 8080:8080 &
+          sleep 5 # Give port-forward some time to establish
+          curl -X POST -H "Content-Type: text/plain" -d "Abs" http://localhost:8080/departments
+          # Optionally, kill the background port-forward process if needed
+          kill %1
           
       - name: Test /stories endpoint
         run: |
