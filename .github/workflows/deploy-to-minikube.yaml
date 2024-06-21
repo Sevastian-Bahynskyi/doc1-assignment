@@ -97,7 +97,8 @@ jobs:
       - name: Test /departments endpoint
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -it $POD_NAME -- /bin/bash -c 'apt-get update && apt-get install curl -y && curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments'
+          kubectl port-forward $POD_NAME 8080:8080
+          curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments'
           
       - name: Test /stories endpoint
         run: |
