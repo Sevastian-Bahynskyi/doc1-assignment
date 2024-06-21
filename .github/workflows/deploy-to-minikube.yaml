@@ -97,7 +97,7 @@ jobs:
       - name: Test /departments endpoint
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -it $POD_NAME -- /bin/bash -c 'curl -X POST -H "Content-Type: application/text" -d "Abs" http://127.0.0.1:8080/departments'        continue-on-error: true
+          kubectl exec -it $POD_NAME -- /bin/bash -c 'apt-get update && apt-get install curl -y && curl http://localhost:8080/departments'
         id: test_departments
 
       # Retry /departments endpoint if the first attempt failed
