@@ -96,7 +96,8 @@ jobs:
        # Test /departments endpoint
       - name: Test /departments endpoint
         run: |
-          curl -X POST -H "Content-Type: application/text" -d "Abs" http://127.0.0.1:8080/departments
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl exec -it $POD_NAME -- curl -X POST -H "Content-Type: application/text" -d "Abs" http://127.0.0.1:8080/departments
         continue-on-error: true
         id: test_departments
 
