@@ -82,9 +82,9 @@ jobs:
         run: |
           kubectl rollout status deployment/backend-deployment --timeout=1m
 
-       # Wait for 20 seconds
-      - name: Wait for 20 seconds
-        run: sleep 20
+       # Wait for 25 seconds
+      - name: Wait for 25 seconds
+        run: sleep 25
 
      # Log into running pod
       - name: Log into running pod
@@ -93,18 +93,20 @@ jobs:
           echo "Logging into pod: $POD_NAME"
           kubectl logs $POD_NAME
 
-      # Test requests
+       # Test /departments endpoint
       - name: Test /departments endpoint
         run: |
-          curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments
-
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl exec -it $POD_NAME -- /bin/bash -c 'apt-get update && apt-get install curl -y && curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments'
+          
       - name: Test /stories endpoint
         run: |
-          curl -X POST -H "Content-Type: application/json" -d '{
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl exec -it $POD_NAME -- curl -X POST -H "Content-Type: application/json" -d '{
                   "headline": "Cool story",
                   "content": "Really cool story",
                   "departmentId": 1
-                }' http://localhost:8080/stories
+                }' http://127.0.0.1:8080/stories
 
       # Clean up Docker images (optional)
       - name: Clean up Docker images
