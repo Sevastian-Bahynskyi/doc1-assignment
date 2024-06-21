@@ -97,22 +97,12 @@ jobs:
       - name: Test /departments endpoint
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -it $POD_NAME -- /bin/bash -c 'apt-get update && apt-get install curl -y && curl http://localhost:8080/departments'
-        id: test_departments
-
-      # Retry /departments endpoint if the first attempt failed
-      - name: Retry /departments endpoint if failed
-        if: ${{ steps.test_departments.outcome == 'failure' }}
-        run: |
-          echo "Retrying /departments endpoint..."
-          sleep 2
-          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -it $POD_NAME -- /bin/bash 
-          curl -X POST -H "Content-Type: application/text" -d "Abs" http://backend-service.default:8080/departments
-
+          kubectl exec -it $POD_NAME -- /bin/bash -c 'apt-get update && apt-get install curl -y && curl -X POST -H "Content-Type: application/text" -d "Abs" http://localhost:8080/departments'
+          
       - name: Test /stories endpoint
         run: |
-          curl -X POST -H "Content-Type: application/json" -d '{
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl exec -it $POD_NAME -- /bin/bash -c curl -X POST -H "Content-Type: application/json" -d '{
                   "headline": "Cool story",
                   "content": "Really cool story",
                   "departmentId": 1
