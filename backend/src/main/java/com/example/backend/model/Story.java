@@ -32,7 +32,7 @@ public class Story {
     }
 
     // Default constructor for JPA
-    protected Story() {}
+    public Story() {}
 
     // Getters
     public int getId() {

@@ -21,7 +21,7 @@ public class Department {
     }
 
     // Default constructor for JPA
-    protected Department() {}
+    public Department() {}
 
     // Getters and setters
     public int getId() {
