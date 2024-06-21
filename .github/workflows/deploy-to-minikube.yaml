@@ -82,9 +82,26 @@ jobs:
         run: |
           kubectl rollout status deployment/backend-deployment --timeout=1m
 
-       # Wait for 25 seconds
-      - name: Wait for 25 seconds
-        run: sleep 25
+       # Check if the application is ready
+      - name: Wait for Spring Boot application to be ready
+        run: |
+          POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
+          kubectl port-forward $POD_NAME 8080:8080 &
+          PORT_FORWARD_PID=$!
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/actuator/health | grep '"status":"UP"'; then
+              echo "Application is ready"
+              kill $PORT_FORWARD_PID
+              break
+            fi
+            echo "Waiting for application to be ready..."
+            sleep 5
+            if [ $i -eq 30 ]; then
+              echo "Application did not become ready in time"
+              kill $PORT_FORWARD_PID
+              exit 1
+            fi
+          done
 
      # Log into running pod
       - name: Log into running pod
@@ -98,19 +115,21 @@ jobs:
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
           kubectl port-forward $POD_NAME 8080:8080 &
-          sleep 5 # Give port-forward some time to establish
+          sleep 5
           curl -X POST -H "Content-Type: text/plain" -d "Abs" http://localhost:8080/departments
-          # Optionally, kill the background port-forward process if needed
           kill %1
           
       - name: Test /stories endpoint
         run: |
           POD_NAME=$(kubectl get pod -l app=backend -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec -it $POD_NAME -- curl -X POST -H "Content-Type: application/json" -d '{
+          kubectl port-forward $POD_NAME 8080:8080 &
+          sleep 5
+          curl -X POST -H "Content-Type: application/json" -d '{
                   "headline": "Cool story",
                   "content": "Really cool story",
                   "departmentId": 1
                 }' http://127.0.0.1:8080/stories
+          kill %1
 
       # Clean up Docker images (optional)
       - name: Clean up Docker images
